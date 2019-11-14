@@ -1,0 +1,40 @@
+.colors-theme-wrapper .sidebar-left{float:left;width:45%}
+.colors-theme-wrapper .sidebar-right{float:left;width:50%;margin-left:25px;}
+.colors-theme-wrapper .form-item label {float:left}
+.colors-theme-wrapper .form-item input {float:left;margin-left:15px;}
+.colors-theme-wrapper .form-type-radio label {float:none;}
+.colors-theme-wrapper .form-type-radios label {float:none;}
+.colors-theme-wrapper .form-type-radio input {float:none;}
+#edit-theme-color-code-value{display:none;}
+#edit-theme-color-code-hover-value{display:none;}
+#edit-important-link-color-1-value{display:none;}
+#edit-important-link-color-2-value{display:none;}
+#edit-ai-color-1-value{display:none;}
+#edit-ai-color-2-value{display:none;}
+#edit-ai-color-3-value{display:none;}
+#edit-ai-color-4-value{display:none;}
+#edit-ai-color-5-value{display:none;}
+#edit-ai-color-6-value{display:none;}
+#edit-ai-color-7-value{display:none;}
+#edit-ai-color-8-value{display:none;}
+#edit-ai-color-9-value{display:none;}
+#edit-ai-color-10-value{display:none;}
+#edit-ai-color-11-value{display:none;}
+#edit-ai-color-12-value{display:none;}
+#edit-ai-color-13-value{display:none;}
+#edit-ai-color-14-value{display:none;}
+#edit-ai-color-15-value{display:none;}
+#edit-ai-color-16-value{display:none;}
+#edit-ai-color-17-value{display:none;}
+#edit-ai-color-18-value{display:none;}
+#edit-ai-color-19-value{display:none;}
+#edit-key-stats-color-1-value{display:none;}
+#edit-key-stats-color-2-value{display:none;}
+#edit-key-stats-color-3-value{display:none;}
+#edit-key-stats-color-4-value{display:none;}
+#edit-key-stats-color-5-value{display:none;}
+#edit-key-stats-color-6-value{display:none;}
+#edit-key-stats-color-7-value{display:none;}
+#edit-key-stats-color-8-value{display:none;}
+#edit-key-stats-color-9-value{display:none;}
+#edit-key-stats-color-10-value{display:none;}

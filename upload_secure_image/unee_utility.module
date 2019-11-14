@@ -1,0 +1,70 @@
+<?php 
+function unee_utility_form_alter(&$form, &$form_state, $form_id){
+	/* echo '<pre>';
+	print_r($form_state);die; */
+	if(!empty($form['#entity_type']) && $form['#entity_type'] == "node"){
+		//$form['#validate'][] = "node_form_field_validation";
+		foreach($form_state['field'] as $key=>$value){
+			if(!empty($form_state['field'][$key]['und'])){
+				if($form_state['field'][$key]['und']['field']['module'] == "image" ){  
+					$arr = $form[$key]['und']; 
+					if(!empty($arr['#file_upload_delta'])){  
+						$form[$key]['und'][$arr['#file_upload_delta']]['#upload_validators']['unee_utility_upload_validate_image'] = array();
+					}else{
+						$form[$key]['und'][0]['#upload_validators']['unee_utility_upload_validate_image'] = array();
+					}
+				}
+				if( $form_state['field'][$key]['und']['field']['module'] == "file"){
+					
+					$arr = $form[$key]['und']; 
+					if(!empty($arr['#file_upload_delta'])){  
+						$form[$key]['und'][$arr['#file_upload_delta']]['#upload_validators']['unee_utility_upload_validate_file'] = array();
+					}else{
+						$form[$key]['und'][0]['#upload_validators']['unee_utility_upload_validate_file'] = array();
+					}
+				}			
+			}
+		}
+	}
+}
+
+function unee_utility_upload_validate_image($file){
+	/* $errors[] = 'Malicious File cannot upload!'; */
+		$filepath =$file->uri;
+		$filename =$file->filename;
+			
+		
+		$file_info = new finfo(FILEINFO_MIME_TYPE); // new changes
+		$mimetyy = $file_info->buffer(file_get_contents($filepath)); // new changes 
+		/* echo $filepath;die; */
+	   /* if( false === getimagesize($filepath) ){ */
+	    if( false === exif_imagetype($filepath) ){ 
+			$errors[]="Malicious File is not allowed" ;  
+		  }
+	  if(substr_count($filename, '.') > 1){
+		  $errors[] = 'File Extension not allowed.';
+	  }
+/* if (!@getimagesize($_FILES['wpshop_file']['tmp_name']))
+
+    wp_die(__('An invalid image was supplied.')); */
+
+	return $errors;
+	
+}
+function unee_utility_upload_validate_file($file){
+	
+		$filepath =$file->uri;
+		$filename =$file->filename;					
+		
+		$file_info = new finfo(FILEINFO_MIME_TYPE); 
+		$mimetyy = $file_info->buffer(file_get_contents($filepath)); 
+		/* echo $filepath;die; */
+		if( false === exif_imagetype($filepath) ){
+			$errors[]="falsesdad";  
+		  }
+		if(substr_count($filename, '.') > 1){
+		  $errors[] = 'File Extension not allowed.';
+		}
+		return $errors;
+}
+?>

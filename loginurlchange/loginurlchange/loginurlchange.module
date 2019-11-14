@@ -1,0 +1,26 @@
+<?php 
+function loginurlchange_menu() {
+  $items = array();
+
+  $items['sitelogin'] = array(
+    'title' => 'Super Secret Login Page',
+    'page callback' => 'loginurlchange_user_page',
+    'page arguments' => array(true),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+}
+
+function loginurlchange_menu_alter(&$items) {
+  $items['user']['page callback'] = 'loginurlchange_user_page';
+}
+
+function loginurlchange_user_page($show = false){	
+	if ($show) {
+		return drupal_get_form('user_login');
+	}
+	drupal_not_found();
+}
+?>

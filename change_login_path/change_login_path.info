@@ -1,0 +1,10 @@
+name = Change Login Path
+description = Change Login Path
+core = 7.x
+author = Atul
+configure = admin/config/login_path
+; Information added by Drupal.org packaging script on 2019-07-18
+version = "7.x-1.0+1-dev"
+core = "7.x"
+project = "change_login_path"
+datestamp = "1563450487"

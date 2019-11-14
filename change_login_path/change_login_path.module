@@ -1,0 +1,70 @@
+<?php
+function get_sec_login_path_html($label='Login'){
+	$spath=variable_get('a_change_login_url','user');
+	return '<a href="'.$spath.'" title="'.$spath.'">'.$label.'</a>';
+}
+
+function change_login_path_menu(){
+	$items=array();
+	
+	$items['admin/config/login_path']=array(
+		'title'=>'Change Login URL',		 
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('login_url_change'),
+		'access callback'=>true
+	);	
+	
+	$spath=variable_get('a_change_login_url','');
+	if(!empty($spath)){
+		$items[$spath]=array(
+			'title'=>'Login',
+			'page callback'=>'sec_login_form',
+			'page arguments'=>array(true),
+			'access callback'=>true
+		);
+	}	
+	return $items;
+}
+
+function change_login_path_menu_alter(&$items){
+	$spath=variable_get('a_change_login_url','');
+	if(!empty($spath)){
+		$items['user']['page callback']='sec_login_form';	
+	}
+}
+
+
+function sec_login_form($flag=false){
+	if($flag){
+		return drupal_get_form('user_login');
+	}
+	drupal_not_found();
+}
+
+
+function login_url_change($form,&$form_state){
+	
+	$form['login_url_path']= array(
+		'#type'=>'textfield',
+		'#title'=>'Enter Path',
+		'#default_value'=>variable_get('a_change_login_url',''),
+	);
+	
+	$form['submit_button']=array(
+		'#type'=>'submit',
+		'#value'=>t('Submit'),
+		'#name'=>'submit',
+	);
+	return $form;
+}
+
+function login_url_change_submit($form,&$form_state){
+	if(isset($form_state['values']['login_url_path'])){		
+		variable_set('a_change_login_url',($form_state['values']['login_url_path']));
+		/* drupal_flush_all_caches();		 */
+		/* cache_clear_all($nodeurl, 'cache_menu'); */
+		 menu_rebuild();
+	}
+	
+}
+?>

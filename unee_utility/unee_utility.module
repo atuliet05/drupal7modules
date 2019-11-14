@@ -1,0 +1,1251 @@
+<?php
+/********Block create for autonomous institute & psu************/
+function unee_utility_init(){
+	global $base_url;
+	/* drupal_add_js($base_url.'/sites/all/modules/customs/unee_utility/js/color_custom.js');  */
+	$js_location='header';
+	//drupal_add_js(drupal_get_path('module', 'unee_utility').'/js/color_custom.js',array( 'scope' => $js_location , 'cache' => FALSE) ); 
+	drupal_add_css(drupal_get_path('module', 'unee_utility') . '/css/color_custom.css',  array('weight' => '9999'));
+}
+
+function unee_utility_menu(){
+	$items['admin/workbench/theme-color'] = array(
+		'title'=> 'Fill Color Code',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('form_color_form'),		
+		'access callback' => true,
+	);
+	
+	$items['admin/workbench/theme-color/tab1'] = array(
+		'title' => 'Fill Color Code',
+		'type' => MENU_DEFAULT_LOCAL_TASK,
+		'weight' => -10
+	);
+
+	$items['admin/workbench/theme-color/important-link'] = array(
+		'title' => 'Important Link',
+		'type' => MENU_LOCAL_TASK,
+		'page callback' => 'important_link_form',
+		'access callback' => true,		
+		'weight' => 1
+	);
+	$items['admin/workbench/theme-color/autonomus-institutes'] = array(
+		'title' => 'Autonomous Institutes',
+		'type' => MENU_LOCAL_TASK,		
+		'page callback' => 'autonomous_institutes_form',		
+		'access callback' => true,
+		'weight' => 2
+	);
+	$items['admin/workbench/theme-color/key-statics'] = array(
+		'title' => 'Key Statics',
+		'type' => MENU_LOCAL_TASK,
+		/* 'page callback' => 'drupal_get_form', */
+		'page callback' => 'key_statics_form',
+		/* 'access arguments' => array('some permission') */
+		/* 'page arguments' => array('form_color_form'), */
+		'access callback' => true,
+		'weight' => 3
+	);
+
+  return $items;	
+}
+
+
+function form_color_form($form, &$form_state){
+			
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'theme_color_code','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode])?$result[colorcode]:'';
+
+	$form['theme_color_code'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Theme Color Code'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+  
+
+	  $form['theme_color_code_value'] = array(
+		'#type' => 'textfield', 
+		'#value'=>$value, 
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+
+
+	$form['theme_color_code_hover'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Theme Color Code on Hover'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+  
+  
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'theme_color_code_hover','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['theme_color_code_hover_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  
+	  
+	# the options to display in our checkboxes
+	$toppings = array(
+	  '0' => t('Disable'), 
+	  '1' => t('Enable'),  
+	);
+
+	$result = db_select('color_code','c')
+		->fields('c',array(colorcode))
+		->condition('name', 'theme_color_option','=')
+		->execute()
+		->fetchAssoc();
+	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:0;
+
+	# the drupal checkboxes form field definition
+	$form['theme_color_option'] = array(
+	  '#title' => t('Theme Color Enable / Disable Option'),
+	  '#type' => 'radios',
+	  '#description' => t('Enable Theme Color if you want change theme color.'),
+	  '#options' => $toppings,
+	  '#default_value' => $value,
+	);
+
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  ); 
+  
+  return $form;
+}
+
+function form_color_form_submit($form, &$form_state){
+	   	
+	$theme_color_code_value = (!empty($form_state['values']['theme_color_code']))?$form_state['values']['theme_color_code']:$form_state['values']['theme_color_code_value'];
+
+	$theme_color_code_hover_value = (!empty($form_state['values']['theme_color_code_hover']))?$form_state['values']['theme_color_code_hover']:$form_state['values']['theme_color_code_hover_value'];
+	
+ $theme_color_option = (!empty($form_state['values']['theme_color_option']))?$form_state['values']['theme_color_option']:'0';
+
+
+	 $name ='theme_color_code';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $theme_color_code_value
+	))
+	->execute();
+	
+	
+	$name ='theme_color_code_hover';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $theme_color_code_hover_value
+	))
+	->execute(); 
+	
+	$name ='theme_color_option';
+		db_merge('color_code')
+		->key(array('name' => $name))
+		->fields(array(
+		  'name' => $name,
+		  'colorcode' => $theme_color_option
+	))
+	->execute(); 
+
+}
+
+
+
+function form_important_link_form($form,&$form_state){
+
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'important_link_color_1','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode])?$result[colorcode]:'';
+
+	$form['important_link_color_1'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Important Link Color Code for ODD Box(1)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+  
+
+	  $form['important_link_color_1_value'] = array(
+		'#type' => 'textfield', 
+		'#value'=>$value, 
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+
+
+	$form['important_link_color_2'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Important Link Color Code for EVEN Box(2)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+  
+  
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'important_link_color_2','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['important_link_color_2_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  
+	  
+	
+	$toppings = array(
+	  '0' => t('Disable'), 
+	  '1' => t('Enable'),  
+	);
+
+	$result = db_select('color_code','c')
+		->fields('c',array(colorcode))
+		->condition('name', 'important_link_option','=')
+		->execute()
+		->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:0;
+
+	# the drupal checkboxes form field definition
+	$form['important_link_option'] = array(
+	  '#title' => t('Theme Color Enable / Disable Option'),
+	  '#type' => 'radios',
+	  '#description' => t('Enable Theme Color if you want change theme Important Link color.'),
+	  '#options' => $toppings,
+	  '#default_value' => $value,
+	);
+
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  ); 
+  
+  return $form;
+}
+
+function important_link_form(){
+	global $base_url;
+	$result['form'] = drupal_get_form('form_important_link_form');
+	$result['image'] = $base_url.'/sites/all/modules/customs/unee_utility/images/important_linkpng.png';
+	$output = theme('unee_utility', array('output' => $result));
+	return $output;
+}
+
+
+
+function form_important_link_form_submit($form,&$form_state){
+	$important_link_color_1 = (!empty($form_state['values']['important_link_color_1']))?$form_state['values']['important_link_color_1']:'';
+
+	$important_link_color_2 = (!empty($form_state['values']['important_link_color_2']))?$form_state['values']['important_link_color_2']:'';
+	
+	$important_link_option = (!empty($form_state['values']['important_link_option']))?$form_state['values']['important_link_option']:'0';
+
+
+	 $name ='important_link_color_1';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $important_link_color_1
+	))
+	->execute();
+	
+	
+	$name ='important_link_color_2';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $important_link_color_2
+	))
+	->execute(); 
+	
+	$name ='important_link_option';
+		db_merge('color_code')
+		->key(array('name' => $name))
+		->fields(array(
+		  'name' => $name,
+		  'colorcode' => $important_link_option
+	))
+	->execute();
+}
+
+
+function unee_utility_theme() {
+  return array(
+    'unee_utility' => array(
+      /* 'arguments' => array('output' => NULL,'form'=>null), */
+	  'arguments' => Array('output' => NULL),
+      'template' => 'template/colord',
+      
+     )
+	);
+}
+function autonomous_institutes_form(){
+	global $base_url;
+	$result['form'] = drupal_get_form('form_autonomous_institutes_form');
+	$result['image'] = $base_url.'/sites/all/modules/customs/unee_utility/images/ai.png';
+	
+	$output = theme('unee_utility',array('output'=>$result));
+	return $output;
+}
+
+
+function form_autonomous_institutes_form($form,&$form_state){
+	
+
+	$form['ai_color_1'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(1)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+  
+	  $result = db_select('color_code','c')
+		->fields('c',array(colorcode))
+		->condition('name', 'ai_color_1','=')
+		->execute()
+		->fetchAssoc();
+		
+		$value=isset($result[colorcode])?$result[colorcode]:'';
+
+	  $form['ai_color_1_value'] = array(
+		'#type' => 'textfield', 
+		'#value'=>$value, 
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+
+
+	$form['ai_color_2'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(2)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_2','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_2_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	 
+	 
+	 $form['ai_color_3'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(3)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_3','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_3_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	 
+	 $form['ai_color_4'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(4)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_4','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_4_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	 
+	 $form['ai_color_5'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(5)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_5','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_5_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  
+	  $form['ai_color_6'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(6)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_6','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_6_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  
+	  $form['ai_color_7'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(7)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_7','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_7_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	$form['ai_color_8'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(8)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_8','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_8_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  $form['ai_color_9'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(9)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_9','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_9_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  
+	   $form['ai_color_10'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(10)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_10','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_10_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	   $form['ai_color_11'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(11)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_11','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_11_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	   $form['ai_color_12'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(12)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_12','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_12_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  
+	   $form['ai_color_13'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(13)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_13','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_13_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  
+	   $form['ai_color_14'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(14)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_14','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_14_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  
+	   $form['ai_color_15'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(15)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_15','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_15_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  
+	  $form['ai_color_16'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(16)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_16','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_16_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  
+	  $form['ai_color_17'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(17)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_17','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_17_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	  $form['ai_color_18'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(18)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_18','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_18_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	 
+	 $form['ai_color_19'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Autonomous Institute Color Code for Box(19)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+    
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'ai_color_19','=')
+    ->execute()
+    ->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:'';	 
+	  $form['ai_color_19_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	$toppings = array(
+	  '0' => t('Disable'), 
+	  '1' => t('Enable'),  
+	);
+
+	$result = db_select('color_code','c')
+		->fields('c',array(colorcode))
+		->condition('name', 'ai_color_option_flag','=')
+		->execute()
+		->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:0;
+
+	# the drupal checkboxes form field definition
+	$form['ai_color_option_flag'] = array(
+	  '#title' => t('Important Link Color Enable / Disable Option'),
+	  '#type' => 'radios',
+	  '#description' => t('Enable Important Link Color if you want change theme Autonomous Institutes color.'),
+	  '#options' => $toppings,
+	  '#default_value' => $value,
+	);
+
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  ); 
+  
+  return $form;
+}
+
+function form_autonomous_institutes_form_submit($form,&$form_state){
+	$ai_color_1 = (!empty($form_state['values']['ai_color_1']))?$form_state['values']['ai_color_1']:'';
+	$ai_color_2 = (!empty($form_state['values']['ai_color_2']))?$form_state['values']['ai_color_2']:'';	
+	$ai_color_3 = (!empty($form_state['values']['ai_color_3']))?$form_state['values']['ai_color_3']:'';
+	
+	$ai_color_4 = (!empty($form_state['values']['ai_color_4']))?$form_state['values']['ai_color_4']:'';
+	$ai_color_5 = (!empty($form_state['values']['ai_color_5']))?$form_state['values']['ai_color_5']:'';
+	$ai_color_6 = (!empty($form_state['values']['ai_color_6']))?$form_state['values']['ai_color_6']:'';
+	$ai_color_7 = (!empty($form_state['values']['ai_color_7']))?$form_state['values']['ai_color_7']:'';
+	$ai_color_8 = (!empty($form_state['values']['ai_color_8']))?$form_state['values']['ai_color_8']:'';
+	$ai_color_9 = (!empty($form_state['values']['ai_color_9']))?$form_state['values']['ai_color_9']:'';
+	$ai_color_10 = (!empty($form_state['values']['ai_color_10']))?$form_state['values']['ai_color_10']:'';
+	$ai_color_11 = (!empty($form_state['values']['ai_color_11']))?$form_state['values']['ai_color_11']:'';
+	$ai_color_12 = (!empty($form_state['values']['ai_color_12']))?$form_state['values']['ai_color_12']:'';
+	$ai_color_13 = (!empty($form_state['values']['ai_color_13']))?$form_state['values']['ai_color_13']:'';
+	$ai_color_14 = (!empty($form_state['values']['ai_color_14']))?$form_state['values']['ai_color_14']:'';
+	$ai_color_15 = (!empty($form_state['values']['ai_color_15']))?$form_state['values']['ai_color_15']:'';
+	$ai_color_16 = (!empty($form_state['values']['ai_color_16']))?$form_state['values']['ai_color_16']:'';
+	$ai_color_17 = (!empty($form_state['values']['ai_color_17']))?$form_state['values']['ai_color_17']:'';
+	$ai_color_18 = (!empty($form_state['values']['ai_color_18']))?$form_state['values']['ai_color_18']:'';
+	$ai_color_19 = (!empty($form_state['values']['ai_color_19']))?$form_state['values']['ai_color_19']:'';
+	
+	$ai_color_option_flag = (!empty($form_state['values']['ai_color_option_flag']))?$form_state['values']['ai_color_option_flag']:'0';
+
+
+	 $name ='ai_color_1';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_1
+	))
+	->execute();
+	
+	
+	$name ='ai_color_2';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_2
+	))
+	->execute(); 
+	
+	$name ='ai_color_3';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_3
+	))
+	->execute(); 
+	/* */
+	$name ='ai_color_4';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_4
+	))
+	->execute(); 
+	$name ='ai_color_5';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_5
+	))
+	->execute(); 
+	$name ='ai_color_6';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_6
+	))
+	->execute(); 
+	
+	$name ='ai_color_7';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_7
+	))
+	->execute(); 
+	$name ='ai_color_8';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_8
+	))
+	->execute(); 
+	$name ='ai_color_9';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_9
+	))
+	->execute(); 
+	$name ='ai_color_10';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_10
+	))
+	->execute(); 
+	$name ='ai_color_11';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_11
+	))
+	->execute(); 
+	$name ='ai_color_12';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_12
+	))
+	->execute(); 
+	$name ='ai_color_13';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_13
+	))
+	->execute(); 
+	$name ='ai_color_14';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_14
+	))
+	->execute(); 
+	$name ='ai_color_15';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_15
+	))
+	->execute(); 
+	$name ='ai_color_16';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_16
+	))
+	->execute();
+	$name ='ai_color_17';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_17
+	))
+	->execute();
+	$name ='ai_color_18';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_18
+	))
+	->execute();
+	$name ='ai_color_19';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $ai_color_19
+	))
+	->execute();
+	
+	
+	
+	
+	$name ='ai_color_option_flag';
+		db_merge('color_code')
+		->key(array('name' => $name))
+		->fields(array(
+		  'name' => $name,
+		  'colorcode' => $ai_color_option_flag
+	))
+	->execute();
+}
+
+/* KEY STATISTICS section start here */
+function key_statics_form(){
+	global $base_url;
+	$result['form'] = drupal_get_form('form_key_statics_form');
+	$result['image'] = $base_url.'/sites/all/modules/customs/unee_utility/images/key-statics.png';
+	
+	$output = theme('unee_utility',array('output'=>$result));
+	return $output;
+}
+
+function form_key_statics_form($form,&$form_state){
+	
+	$form['key_stats_color_1'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Key Statistics Color Code for Box(1)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'key_stats_color_1','=')
+    ->execute()
+    ->fetchAssoc();	
+	$value=isset($result[colorcode])?$result[colorcode]:'';
+
+	  $form['key_stats_color_1_value'] = array(
+		'#type' => 'textfield', 
+		'#value'=>$value, 
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+
+
+	$form['key_stats_color_2'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Key Statistics Color Code for Box(2)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'key_stats_color_2','=')
+    ->execute()
+    ->fetchAssoc();	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['key_stats_color_2_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  ); 
+	
+	$form['key_stats_color_3'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Key Statistics Color Code for Box(3)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'key_stats_color_3','=')
+    ->execute()
+    ->fetchAssoc();	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['key_stats_color_3_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  );	
+	  
+	  $form['key_stats_color_4'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Key Statistics Color Code for Box(4)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'key_stats_color_4','=')
+    ->execute()
+    ->fetchAssoc();	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['key_stats_color_4_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  );
+	
+	$form['key_stats_color_5'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Key Statistics Color Code for Box(5)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'key_stats_color_5','=')
+    ->execute()
+    ->fetchAssoc();	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['key_stats_color_5_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  );
+	
+	$form['key_stats_color_6'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Key Statistics Color Code for Box(6)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'key_stats_color_6','=')
+    ->execute()
+    ->fetchAssoc();	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['key_stats_color_6_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  );
+	
+	$form['key_stats_color_7'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Key Statistics Color Code for Box(7)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'key_stats_color_7','=')
+    ->execute()
+    ->fetchAssoc();	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['key_stats_color_7_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  );
+	  
+	  $form['key_stats_color_8'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Key Statistics Color Code for Box(8)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'key_stats_color_8','=')
+    ->execute()
+    ->fetchAssoc();	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['key_stats_color_8_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  );
+	  
+	  $form['key_stats_color_9'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Key Statistics Color Code for Box(9)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'key_stats_color_9','=')
+    ->execute()
+    ->fetchAssoc();	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['key_stats_color_9_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  );
+	  
+	   $form['key_stats_color_10'] = array(
+		'#type' => 'colorfield_picker',
+		'#title' => t('Key Statistics Color Code for Box(10)'),
+		'#default_value' => variable_get('text_color', '#000')			
+	 );
+
+	$result = db_select('color_code','c')
+    ->fields('c',array(colorcode))
+	->condition('name', 'key_stats_color_10','=')
+    ->execute()
+    ->fetchAssoc();	
+	$value=isset(	$result[colorcode] )?$result[colorcode]:'';
+	 
+	  $form['key_stats_color_10_value'] = array(    
+		'#type' => 'textfield', 
+		'#value'=>$value, 	
+		'#attributes' => array('readonly' => 'readonly'),     
+	  );
+	  
+	
+	$toppings = array(
+	  '0' => t('Disable'), 
+	  '1' => t('Enable'),  
+	);
+
+	$result = db_select('color_code','c')
+		->fields('c',array(colorcode))
+		->condition('name', 'key_stats_option','=')
+		->execute()
+		->fetchAssoc();
+	
+	$value=isset($result[colorcode] )?$result[colorcode]:0;
+
+	# the drupal checkboxes form field definition
+	$form['key_stats_option'] = array(
+	  '#title' => t('Theme Color Enable / Disable Option'),
+	  '#type' => 'radios',
+	  '#description' => t('Enable Theme Color if you want change theme Key-Statistics color.'),
+	  '#options' => $toppings,
+	  '#default_value' => $value,
+	);
+
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  ); 
+  
+  return $form;
+}
+function form_key_statics_form_submit($form,&$form_state){
+	$key_stats_color_1 = (!empty($form_state['values']['key_stats_color_1']))?$form_state['values']['key_stats_color_1']:'';
+	$key_stats_color_2 = (!empty($form_state['values']['key_stats_color_2']))?$form_state['values']['key_stats_color_2']:'';
+	$key_stats_color_3 = (!empty($form_state['values']['key_stats_color_3']))?$form_state['values']['key_stats_color_3']:'';
+	$key_stats_color_4 = (!empty($form_state['values']['key_stats_color_4']))?$form_state['values']['key_stats_color_4']:'';
+	$key_stats_color_5 = (!empty($form_state['values']['key_stats_color_5']))?$form_state['values']['key_stats_color_5']:'';
+	$key_stats_color_6 = (!empty($form_state['values']['key_stats_color_6']))?$form_state['values']['key_stats_color_6']:'';
+	$key_stats_color_7 = (!empty($form_state['values']['key_stats_color_7']))?$form_state['values']['key_stats_color_7']:'';
+	$key_stats_color_8 = (!empty($form_state['values']['key_stats_color_8']))?$form_state['values']['key_stats_color_8']:'';
+	$key_stats_color_9 = (!empty($form_state['values']['key_stats_color_9']))?$form_state['values']['key_stats_color_9']:'';
+	$key_stats_color_10 = (!empty($form_state['values']['key_stats_color_10']))?$form_state['values']['key_stats_color_10']:'';
+		
+	
+	$key_stats_option = (!empty($form_state['values']['key_stats_option']))?$form_state['values']['key_stats_option']:'0';
+	
+	$name ='key_stats_color_1';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $key_stats_color_1
+	))
+	->execute();
+	$name ='key_stats_color_2';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $key_stats_color_2
+	))
+	->execute();
+	$name ='key_stats_color_3';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $key_stats_color_3
+	))
+	->execute();
+	$name ='key_stats_color_4';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $key_stats_color_4
+	))
+	->execute();
+	$name ='key_stats_color_5';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $key_stats_color_5
+	))
+	->execute();
+	$name ='key_stats_color_6';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $key_stats_color_6
+	))
+	->execute();
+	
+	$name ='key_stats_color_7';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $key_stats_color_7
+	))
+	->execute();
+	
+	 $name ='key_stats_color_8';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $key_stats_color_8
+	))
+	->execute();
+	
+	
+	$name ='key_stats_color_9';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $key_stats_color_9
+	))
+	->execute(); 
+	
+	$name ='key_stats_color_10';
+	db_merge('color_code')
+	->key(array('name' => $name))
+	->fields(array(
+      'name' => $name,
+      'colorcode' => $key_stats_color_10
+	))
+	->execute(); 
+	
+	$name ='key_stats_option';
+		db_merge('color_code')
+		->key(array('name' => $name))
+		->fields(array(
+		  'name' => $name,
+		  'colorcode' => $key_stats_option
+	))
+	->execute();
+}
+?>
+

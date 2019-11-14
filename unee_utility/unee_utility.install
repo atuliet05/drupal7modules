@@ -1,0 +1,30 @@
+<?php
+/*
+Install module with new database
+*/
+
+/* Implement hook_install */
+function unee_utility_install(){
+	create_color_code_table();
+}
+function create_color_code_table(){
+
+	$sql = "CREATE TABLE color_code(	
+	name VARCHAR(256) NOT NULL,
+	colorcode VARCHAR(30) NOT NULL	
+	)";
+	/* die($sql); */
+	db_query($sql);
+}
+
+/* 
+Implement hook_uninstall 
+*/
+function unee_utility_uninstall(){
+	//create_color_code_table();
+	$table='color_code';
+	if(db_table_exists($table)) {
+	$sql ="DROP TABLE color_code";
+	db_query($sql);
+	}
+}

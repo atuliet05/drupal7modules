@@ -1,0 +1,6 @@
+name = Unee Utility
+description = Uneecops utility module
+core = 7.x
+dependencies[] = colorfield:colorfield
+
+scripts[] = js/color_custom.js
